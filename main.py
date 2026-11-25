@@ -243,16 +243,22 @@ def generate_suggested_questions(query: str, answer: str) -> List[str]:
             "How are CIE and SEE marks calculated?",
             "When are the semester end exams for odd semesters?"
         ]
-    elif any(k in q_lower for k in ["bus", "metro", "reach", "route", "commute", "travel"]):
+    elif any(k in q_lower for k in ["bus", "metro", "reach", "route", "commute", "travel", "address", "location", "stop", "station"]):
         return [
+            "What is the nearest Green Line metro station to DSCE?",
             "Which BMTC bus goes directly to Dayananda Sagar gate?",
-            "What is the nearest metro station on the Green Line?",
-            "Is student two-wheeler parking available on campus?"
+            "What is the difference between DSCE, DSU, and DSATM?"
+        ]
+    elif any(k in q_lower for k in ["dsu", "dsatm", "institution", "difference", "campus"]):
+        return [
+            "What is the difference between DSCE, DSU, and DSATM?",
+            "What is the exact postal address of DSCE campus?",
+            "Are placements combined across DSCE, DSU, and DSATM?"
         ]
     else:
         return [
-            "What are the hostel curfew timings?",
-            "Tell me about the annual cultural fest FURORE",
+            "What is the exact address of DSCE and nearest metro station?",
+            "What is the difference between DSCE, DSU, and DSATM?",
             "What are the B.E. COMEDK fee details for 2026-27?"
         ]
 
@@ -277,6 +283,8 @@ def health_check():
 def get_test_questions():
     """Returns sample benchmark queries for UI testing."""
     return [
+        {"category": "Campus & Commute", "question": "What is the official address of DSCE, nearest metro stations, and direct bus routes?"},
+        {"category": "Campus & Commute", "question": "What is the difference between DSCE, DSU, and DSATM?"},
         {"category": "Admissions & Fees", "question": "What is the 1st year B.E. COMEDK fee for Karnataka students in 2026-27?"},
         {"category": "Admissions & Fees", "question": "What is the management quota tuition fee for CSE and AIML?"},
         {"category": "Hostel & Living", "question": "What are the curfew timings for boys and girls hostels?"},
@@ -285,8 +293,7 @@ def get_test_questions():
         {"category": "Academics", "question": "How are CIE and SEE marks split for grading?"},
         {"category": "Placements", "question": "What are the average and highest packages for Computer Science?"},
         {"category": "Campus Life", "question": "What is Point Blank and how can I join the club?"},
-        {"category": "Campus Life", "question": "Tell me about the annual cultural fest FURORE."},
-        {"category": "Commute", "question": "What is the nearest metro station and how do I reach from Banashankari?"}
+        {"category": "Campus Life", "question": "Tell me about the annual cultural fest FURORE."}
     ]
 
 

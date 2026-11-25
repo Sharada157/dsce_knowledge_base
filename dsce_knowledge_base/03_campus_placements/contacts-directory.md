@@ -59,4 +59,16 @@ Students should contact the coordinators below for academic, examination, fee pa
 | Chemistry | 080-42161700 | 2700 | hod-chemistry@dayanandasagar.edu |
 | Mathematics | 080-42161730 | 2730 | hod-maths@dayanandasagar.edu |
 
-**Campus address:** Dayananda Sagar College of Engineering, Shavige Malleshwara Hills, Kumaraswamy Layout, Bangalore 560 111 (Karnataka). Trust address listed in the site footer: Mahatma Gandhi Vidya Peetha Trust, DSI Institute, Kumara Swamy Layout, JP Nagar, Bangalore 560 078.
+**Official Campus Address:**  
+Dayananda Sagar College of Engineering (DSCE)  
+Shavige Malleshwara Hills, Kumaraswamy Layout, Bengaluru – 560 111, Karnataka, India.  
+*Trust Registered Address:* Mahatma Gandhi Vidya Peetha (MGVP) Trust, Kumaraswamy Layout, Bengaluru 560 111.
+
+**Transit & Metro Connectivity:**
+- **Nearest Namma Metro Stations (Green Line):** JP Nagar Metro (~2.8 km), Banashankari Metro & TTMC (~3.2 km), Yelachenahalli (~3.2 km).
+- **Direct BMTC Bus Stops:** Dayananda Sagar College Gate (Route 15-E from Majestic/City Market), Kadirenahalli Cross (ORR 500 Series & 600 Series), Kumaraswamy Layout Police Station.
+
+**Institutions under Dayananda Sagar Banner:**
+- **DSCE (Kumaraswamy Layout):** Flagship autonomous engineering college founded in 1979, affiliated to VTU Belagavi (KCET Code: E034).
+- **DSATM (Kanakapura Road, Udayapura):** Sister autonomous engineering academy founded in 2011, affiliated to VTU Belagavi (KCET Code: E171).
+- **DSU (Harohalli, Kanakapura Road):** Independent Private State University established under Karnataka Act 20 of 2014, awarding independent DSU degrees.

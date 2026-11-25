@@ -17,11 +17,30 @@ This FAQ is written and curated from a student perspective, incorporating authen
 
 ## 1. Campus Overview, Infrastructure & Facilities
 
-### Q1: Where is DSCE located and how big is the campus?
-**A:** DSCE is located in Kumaraswamy Layout (Shavige Malleshwara Hills), South Bengaluru (Pincode: 560111). The campus spans roughly 28 to 30 acres on hilly terrain. It is a shared campus housing several Dayananda Sagar Institutions (DSI), including the engineering college, dental college, pharmacy college, arts/science degree blocks, and business schools.
+### Q1: Where is DSCE located, what is the exact official address, and how big is the campus?
+**A:**
+- **Official Postal Address:**
+  Dayananda Sagar College of Engineering (DSCE)  
+  Shavige Malleshwara Hills, Kumaraswamy Layout,  
+  Bengaluru, Karnataka – 560111, India.
+- **Key Landmarks:** Situated on Shavige Malleshwara Hills, adjacent to Kumaraswamy Layout Police Station, close to Padmanabhanagar, ISRO Layout, and Kadirenahalli Cross (Outer Ring Road).
+- **Campus Scale:** The main Kumaraswamy Layout campus spans roughly 28 to 30 acres of picturesque hilly terrain. It is the flagship campus of Dayananda Sagar Institutions (DSI), housing the engineering college, dental college, college of pharmacy, arts/science/commerce degree colleges, and business schools.
 
-### Q2: What is the difference between DSCE and DSU?
-**A:** DSCE (Dayananda Sagar College of Engineering) is the legacy, established institution founded in 1979; it is an autonomous college affiliated with Visvesvaraya Technological University (VTU). DSU (Dayananda Sagar University) is a private state university established under a separate act, primarily operating out of the newer main campus located in Harohalli on Kanakapura Road. While placement drives are often coordinated across the group, they are distinct academic entities.
+### Q2: What is the difference between DSCE, DSU, and DSATM?
+**A:**
+Although all three institutions were founded by the Mahatma Gandhi Vidya Peetha (MGVP) Trust under the Dayananda Sagar banner, they are distinct academic entities with different campuses, affiliations, and admission codes:
+
+| Feature | DSCE (Dayananda Sagar College of Engineering) | DSU (Dayananda Sagar University) | DSATM (Dayananda Sagar Academy of Technology & Management) |
+| :--- | :--- | :--- | :--- |
+| **Establishment** | 1979 (Flagship, oldest, most renowned) | 2014 (State Private University) | 2011 (Sister Engineering Academy) |
+| **Location / Campus** | **Kumaraswamy Layout**, South Bengaluru (Main 29-acre campus) | **Harohalli, Kanakapura Road** (Main 130-acre campus; city innovation hubs at Kudlu Gate & KS Layout) | **Kanakapura Road, Udayapura** (Opposite Art of Living, ~15 km from DSCE) |
+| **Affiliation / Status**| **Autonomous**, permanently affiliated to **VTU** (Visvesvaraya Technological University), Belagavi | **State Private University** (Established under Karnataka Act No. 20 of 2014, UGC recognized) | **Autonomous**, affiliated to **VTU** (Visvesvaraya Technological University) |
+| **Degree Awarded** | **VTU Degree** (with DSCE Autonomous curriculum) | **DSU Degree** (Autonomous University curriculum) | **VTU Degree** (with DSATM Autonomous curriculum) |
+| **Accreditation** | NAAC 'A+' Grade, NBA Accredited programs, NIRF Ranked | UGC, AIU, PCI, INC approvals | NAAC Accredited, NBA Accredited departments |
+| **KCET Code** | **E034** | Direct / DSU Admissions (or state quota via DSU CET) | **E171** |
+| **Placements** | **Central Placement Cell (CIL):** Combined pool drives on the main DSCE campus for top product & tier-1 recruiters; DSCE has the highest cutoff and legacy recruiter base. | Coordinates with Central Placements / has university-specific hiring drives. | Participates in Central Pool Placement drives conducted at the main DSCE campus. |
+
+*Summary:* If you are looking for the historic, top-ranked engineering college in Kumaraswamy Layout affiliated to VTU, that is **DSCE**. **DSATM** is the secondary VTU engineering campus on Kanakapura Road (Udayapura). **DSU** is an independent private university located in Harohalli.
 
 ### Q3: What are the main buildings and landmarks on campus?
 **A:** 
@@ -184,16 +203,27 @@ Recruitment occurs annually through a competitive test and interview process.
 
 ## 8. Commute, Metro & Public Transportation
 
-### Q32: What is the nearest Namma Metro station to DSCE?
+### Q32: What is the nearest Namma Metro station to DSCE, and how do I reach the campus from the metro?
 **A:**
-- **Banashankari Metro Station / TTMC (Green Line):** Roughly 3.5 km away. The primary transport hub with frequent connecting feeder buses directly to the campus.
-- **Konanakunte Cross Metro Station (Green Line):** Roughly 3.0 km away along Kanakapura Road.
-- **Yelachenahalli Metro Station (Green Line):** Roughly 3.5 km away.
+The nearest metro stations are located on the **Namma Metro Green Line**:
+1. **Banashankari Metro Station & TTMC (Green Line):** ~3.2 km away.  
+   - *How to reach:* Exit towards the Banashankari Traffic and Transit Management Centre (TTMC) bus terminal. Board **BMTC Route 15-E** or **210-A** which drop you directly at the **Dayananda Sagar College Gate**, or take an auto-rickshaw (approx. ₹50–₹70, 10–12 minutes).
+2. **Jaya Prakash Nagar (JP Nagar) Metro Station (Green Line):** ~2.8 km away.  
+   - *How to reach:* Shortest direct road route via Sarakki signal / 15th Cross; auto-rickshaws take approximately 8 to 10 minutes.
+3. **Yelachenahalli Metro Station (Green Line):** ~3.2 km away via ISRO Layout / Kanakapura Road.
+4. **Konanakunte Cross Metro Station (Green Line):** ~3.5 km away (convenient for students traveling from South Bengaluru / Forum South Bangalore Mall side).
 
-### Q33: Which BMTC bus routes go directly to DSCE?
+### Q33: Which BMTC bus stops and routes serve DSCE directly?
 **A:**
-- **Route 15-E:** Runs directly from Kempegowda Bus Station (Majestic) / City Market to Banashankari and drops students directly at the **Dayananda Sagar College Gate** in Kumaraswamy Layout.
-- **210 Series Buses (e.g., 210-R, 210-U):** Connect to **Kadirenahalli Cross**, located a brief 5-minute walk from the college.
+The college is served by three primary bus stops:
+1. **Dayananda Sagar College Gate Bus Stop (Direct Campus Entrance):**
+   - **Route 15-E:** Runs directly from Kempegowda Bus Station (Majestic) & KR Market via Banashankari TTMC to the **Dayananda Sagar College Gate** in Kumaraswamy Layout.
+   - **Route 210-A / 210-E / 210-G:** Connect Majestic, KR Market, and City Railway Station directly to Kumaraswamy Layout 1st & 2nd Stage.
+2. **Kadirenahalli Cross / Kadirenahalli Underpass Stop (Outer Ring Road - 7 min walk):**
+   - Located ~700 meters from campus along the Outer Ring Road (ORR).
+   - Serviced by the high-frequency **500 Series buses** (e.g., 500-A, 500-D, 500-BA) connecting Silk Board, BTM Layout, HSR Layout, Marathahalli, and Tin Factory.
+   - Serviced by **600 Series buses** connecting Electronic City and Banashankari.
+3. **Kumaraswamy Layout Police Station Stop:** Located ~400 meters from the back gate on Kumaraswamy Layout 50 Feet Road.
 
 ### Q34: Is parking available on campus for student vehicles?
 **A:** Two-wheeler parking is designated inside dedicated parking lots near the main gates and sports grounds upon showing a valid college ID card. Four-wheeler student parking inside campus is strictly regulated and often restricted during working hours due to limited space; most students park cars along designated roads in Kumaraswamy Layout.
