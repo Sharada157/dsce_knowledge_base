@@ -41,13 +41,22 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
 chroma_client = None
 collection = None
 
-try:
-    if CHROMA_DATA_PATH.exists():
+def get_or_refresh_collection():
+    """Retrieve or re-initialize ChromaDB collection."""
+    global chroma_client, collection
+    if not CHROMA_DATA_PATH.exists():
+        return None
+    try:
         chroma_client = chromadb.PersistentClient(path=str(CHROMA_DATA_PATH))
         embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=EMBEDDING_MODEL)
         collection = chroma_client.get_collection(name=COLLECTION_NAME, embedding_function=embedding_fn)
-except Exception as e:
-    print(f"[WARNING] Could not load ChromaDB on startup: {e}")
+        return collection
+    except Exception as e:
+        print(f"[WARNING] Could not load ChromaDB: {e}")
+        return None
+
+# Initial load on startup
+get_or_refresh_collection()
 
 # In-memory session memory: {session_id: [{"role": "user"|"assistant", "content": "..."}]}
 session_store: Dict[str, List[Dict[str, str]]] = {}
@@ -290,21 +299,26 @@ def chat_endpoint(req: ChatRequest):
     if not query:
         raise HTTPException(status_code=400, detail="Query cannot be empty")
 
-    # Check if vector DB is loaded
+    # 1. Retrieve top-k context chunks from ChromaDB (with auto-reconnect on index refresh)
     global collection
-    if collection is None:
-        if CHROMA_DATA_PATH.exists():
-            chroma_client = chromadb.PersistentClient(path=str(CHROMA_DATA_PATH))
-            embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=EMBEDDING_MODEL)
-            collection = chroma_client.get_collection(name=COLLECTION_NAME, embedding_function=embedding_fn)
-        else:
-            raise HTTPException(status_code=503, detail="Vector index not found. Please run ingest.py first.")
+    col = collection or get_or_refresh_collection()
+    if col is None:
+        raise HTTPException(status_code=503, detail="Vector index not found. Please run ingest.py first.")
 
-    # 1. Retrieve top-k context chunks from ChromaDB
-    results = collection.query(
-        query_texts=[query],
-        n_results=req.top_k or 4
-    )
+    try:
+        results = col.query(
+            query_texts=[query],
+            n_results=req.top_k or 4
+        )
+    except Exception as query_err:
+        print(f"[Notice: Refreshing collection after {query_err}]")
+        col = get_or_refresh_collection()
+        if col is None:
+            raise HTTPException(status_code=503, detail="Vector index not found.")
+        results = col.query(
+            query_texts=[query],
+            n_results=req.top_k or 4
+        )
 
     documents = results.get("documents", [[]])[0]
     metadatas = results.get("metadatas", [[]])[0]
