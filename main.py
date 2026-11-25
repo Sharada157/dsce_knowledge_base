@@ -405,9 +405,22 @@ app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 
 @app.get("/")
-def serve_index():
-    """Serves the main chat widget interface."""
+def serve_index(embed: Optional[str] = None):
+    """Serves the realistic official DSCE website or embedded widget."""
+    if embed == "true":
+        chat_path = static_dir / "chat.html"
+        if chat_path.exists():
+            return FileResponse(chat_path)
     index_path = static_dir / "index.html"
     if index_path.exists():
         return FileResponse(index_path)
     return {"message": "DSCE RAG Chatbot API is running. Access /docs for Swagger API."}
+
+
+@app.get("/chat")
+def serve_chat():
+    """Serves the full-screen interactive RAG assistant workbench."""
+    chat_path = static_dir / "chat.html"
+    if chat_path.exists():
+        return FileResponse(chat_path)
+    return FileResponse(static_dir / "index.html")

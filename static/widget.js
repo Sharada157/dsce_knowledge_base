@@ -99,7 +99,8 @@
 
   // Iframe loading the chat interface in compact embedded mode
   const iframe = document.createElement("iframe");
-  iframe.src = `${scriptOrigin}/?embed=true`;
+  iframe.id = "dsce-widget-iframe";
+  iframe.src = `${scriptOrigin}/chat?embed=true`;
   iframe.style.width = "100%";
   iframe.style.height = "100%";
   iframe.style.border = "none";
@@ -107,20 +108,72 @@
 
   chatCard.appendChild(iframe);
 
+  // Callout Prompt Bubble
+  const callout = document.createElement("div");
+  callout.id = "dsce-widget-callout";
+  callout.style.position = "absolute";
+  callout.style.bottom = "12px";
+  callout.style.right = "68px";
+  callout.style.background = "#ffffff";
+  callout.style.color = "#0f172a";
+  callout.style.padding = "8px 14px";
+  callout.style.borderRadius = "20px";
+  callout.style.fontSize = "13px";
+  callout.style.fontWeight = "600";
+  callout.style.whiteSpace = "nowrap";
+  callout.style.boxShadow = "0 8px 24px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(226, 232, 240, 0.8)";
+  callout.style.cursor = "pointer";
+  callout.style.display = "flex";
+  callout.style.alignItems = "center";
+  callout.style.gap = "6px";
+  callout.style.transition = "all 0.25s ease";
+  callout.innerHTML = `<span>💬</span> <span>Ask DSCE AI: 2026-27 Fees & Hostels</span>`;
+
+  callout.onclick = () => {
+    openWidget();
+  };
+
   // Toggle Functionality
   let isOpen = false;
+  function openWidget(queryToAsk = null) {
+    isOpen = true;
+    chatCard.style.display = "flex";
+    callout.style.display = "none";
+    btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+    
+    if (queryToAsk) {
+      setTimeout(() => {
+        try {
+          iframe.contentWindow.postMessage({
+            type: "DSCE_ASK_QUESTION",
+            query: queryToAsk
+          }, "*");
+        } catch (e) {}
+      }, 350);
+    }
+  }
+
+  function closeWidget() {
+    isOpen = false;
+    chatCard.style.display = "none";
+    btn.innerHTML = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`;
+  }
+
   btn.onclick = () => {
-    isOpen = !isOpen;
     if (isOpen) {
-      chatCard.style.display = "flex";
-      btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+      closeWidget();
     } else {
-      chatCard.style.display = "none";
-      btn.innerHTML = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`;
+      openWidget();
     }
   };
 
+  // Global helper for opening the assistant from any link or button on the website
+  window.openDsceAssistant = function (query = null) {
+    openWidget(query);
+  };
+
   container.appendChild(chatCard);
+  container.appendChild(callout);
   container.appendChild(btn);
   document.body.appendChild(container);
 })();
