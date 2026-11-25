@@ -33,6 +33,7 @@ CHROMA_DATA_PATH = Path("./chroma_db").resolve()
 COLLECTION_NAME = "dsce_knowledge_base"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
 
@@ -126,11 +127,39 @@ class ChatResponse(BaseModel):
     session_id: str
 
 
-def call_llm(prompt: str) -> str:
-    """Invoke Gemini API or fallback to Ollama or grounded extractive template."""
-    api_key = os.getenv("GEMINI_API_KEY", "")
+def call_llm(prompt: str) -> Optional[str]:
+    """Invoke Groq API (Primary), Gemini API (Secondary), Ollama (Local), or return None for fallback."""
     
-    # 1. Try Gemini API with fast response and minimal retry wait
+    # 1. Try Groq API (Ultra-fast inference on LPUs)
+    groq_api_key = os.getenv("GROQ_API_KEY", "")
+    if groq_api_key:
+        try:
+            from groq import Groq
+            groq_client = Groq(api_key=groq_api_key, timeout=15.0)
+            groq_models = [
+                "openai/gpt-oss-120b",
+                "openai/gpt-oss-20b",
+                "qwen/qwen3.8-27b"
+            ]
+            for model_name in groq_models:
+                try:
+                    chat_resp = groq_client.chat.completions.create(
+                        messages=[{"role": "user", "content": prompt}],
+                        model=model_name,
+                        temperature=0.2,
+                        max_tokens=1000
+                    )
+                    content = chat_resp.choices[0].message.content
+                    if content and content.strip():
+                        return content.strip()
+                except Exception as g_err:
+                    print(f"[Groq Notice: {model_name} error: {g_err}. Trying next...]")
+                    continue
+        except Exception as e:
+            print(f"[Groq Client Notice] {e}")
+
+    # 2. Try Gemini API
+    api_key = os.getenv("GEMINI_API_KEY", "")
     if api_key:
         try:
             from google import genai
@@ -160,7 +189,7 @@ def call_llm(prompt: str) -> str:
         except Exception as e:
             print(f"[Gemini API Client Notice] {e}")
 
-    # 2. Try Ollama if running locally
+    # 3. Try Ollama if running locally
     try:
         import requests
         res = requests.post(
@@ -173,7 +202,7 @@ def call_llm(prompt: str) -> str:
     except Exception:
         pass
 
-    # 3. Direct RAG extractive synthesis fallback if no active LLM API key
+    # 4. Fallback to clean RAG extractive synthesis
     return None
 
 
@@ -223,12 +252,15 @@ def generate_suggested_questions(query: str, answer: str) -> List[str]:
 def health_check():
     """Health check verifying vector database and status."""
     total_docs = collection.count() if collection else 0
+    has_groq = bool(os.getenv("GROQ_API_KEY"))
+    has_gemini = bool(os.getenv("GEMINI_API_KEY"))
     return {
         "status": "online",
         "vector_db_loaded": collection is not None,
         "indexed_chunks": total_docs,
         "embedding_model": EMBEDDING_MODEL,
-        "llm_configured": bool(os.getenv("GEMINI_API_KEY"))
+        "llm_configured": has_groq or has_gemini,
+        "primary_provider": "groq (LPUs)" if has_groq else ("gemini" if has_gemini else "fallback")
     }
 
 
