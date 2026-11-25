@@ -140,11 +140,11 @@ def call_llm(prompt: str) -> str:
                 api_key=api_key,
                 http_options=types.HttpOptions(timeout=25000)
             )
-            # Reliable active models ordered by current stability
+            # Reliable active models ordered by current available quota
             candidate_models = [
+                "gemini-3.5-flash-lite",
                 "gemini-3.5-flash",
-                "gemini-3.6-flash",
-                "gemini-3.5-flash-lite"
+                "gemini-3.6-flash"
             ]
             for model_name in candidate_models:
                 try:
@@ -317,9 +317,9 @@ def chat_endpoint(req: ChatRequest):
         if documents:
             clean_paragraphs = []
             for doc in documents[:3]:
-                # Clean section tags and Q&A labels
+                # Clean section tags, headers, and Q&A labels
                 cleaned = re.sub(r"^\[.*?\]\s*\n", "", doc).strip()
-                cleaned = re.sub(r"^Q\d+:\s*.*?\n[Aa]:\s*", "", cleaned).strip()
+                cleaned = re.sub(r"^(?:#{1,6}\s*)?Q\d+:\s*.*?\n(?:\*{1,2})?[Aa](?:\*{1,2})?:\s*", "", cleaned).strip()
                 if cleaned and cleaned not in clean_paragraphs:
                     clean_paragraphs.append(cleaned)
             combined = "\n\n".join(clean_paragraphs)
