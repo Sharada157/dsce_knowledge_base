@@ -438,6 +438,12 @@
       .sidebar { display: none; }
       .message-row { max-width: 95%; }
     }
+
+    /* Embedded Widget Mode */
+    body.embedded-mode header { display: none !important; }
+    body.embedded-mode .sidebar { display: none !important; }
+    body.embedded-mode .chat-layout { height: 100vh !important; }
+    body.embedded-mode .chat-main { border-radius: 0 !important; box-shadow: none !important; border: none !important; }
   </style>
 </head>
 <body>
@@ -523,6 +529,11 @@
     const messagesContainer = document.getElementById("messagesContainer");
     const chatInput = document.getElementById("chatInput");
     const sendBtn = document.getElementById("sendBtn");
+
+    // Activate compact embedded mode if query param ?embed=true is set
+    if (window.location.search.includes('embed=true')) {
+      document.body.classList.add('embedded-mode');
+    }
 
     function renderMarkdown(text) {
       if (!text) return "";
