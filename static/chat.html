@@ -552,21 +552,50 @@
       display: inline-block;
       box-shadow: 0 0 6px #4ade80;
     }
-    .embedded-clear-btn {
+    .embedded-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .size-presets {
+      display: flex;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      padding: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .size-chip {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .size-chip:hover, .size-chip.active {
+      background: rgba(255, 255, 255, 0.35);
+      color: #ffffff;
+    }
+    .embedded-icon-btn {
       background: rgba(255, 255, 255, 0.16);
       border: 1px solid rgba(255, 255, 255, 0.25);
       color: #ffffff;
-      padding: 0.25rem 0.55rem;
+      width: 26px;
+      height: 26px;
       border-radius: 6px;
-      font-size: 0.72rem;
+      font-size: 0.74rem;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 0.25rem;
-      transition: all 0.15s;
+      justify-content: center;
+      transition: background 0.15s, transform 0.15s;
     }
-    .embedded-clear-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
+    .embedded-icon-btn:hover {
+      background: rgba(255, 255, 255, 0.35);
+      transform: translateY(-1px);
     }
 
     /* Embedded Messages Area */
@@ -735,7 +764,16 @@
             <div class="embedded-header-status"><span class="status-dot"></span> Online · Verified 2026–27</div>
           </div>
         </div>
-        <button class="embedded-clear-btn" onclick="clearChat()" title="Start New Conversation">🔄 Reset</button>
+        <div class="embedded-header-actions">
+          <div class="size-presets" title="Adjust Chatbot Window Size">
+            <button type="button" class="size-chip" onclick="setSize('S')" title="Compact View (380px)">S</button>
+            <button type="button" class="size-chip active" onclick="setSize('M')" title="Standard View (440px)">M</button>
+            <button type="button" class="size-chip" onclick="setSize('L')" title="Expanded View (640px)">L</button>
+          </div>
+          <button type="button" class="embedded-icon-btn" id="maximizeBtn" onclick="toggleMaximize()" title="Maximize / Restore Window">⛶</button>
+          <button type="button" class="embedded-icon-btn" onclick="clearChat()" title="Start New Conversation (Reset)">🔄</button>
+          <button type="button" class="embedded-icon-btn" onclick="minimizeWidget()" title="Minimize to Corner Button">—</button>
+        </div>
       </div>
 
       <div class="messages-container" id="messagesContainer">
@@ -774,7 +812,11 @@
   </div>
 
   <script>
-    const sessionId = "dsce_session_" + Math.random().toString(36).substring(2, 9);
+    let sessionId = localStorage.getItem("dsce_session_id");
+    if (!sessionId) {
+      sessionId = "dsce_session_" + Math.random().toString(36).substring(2, 9);
+      localStorage.setItem("dsce_session_id", sessionId);
+    }
     const messagesContainer = document.getElementById("messagesContainer");
     const chatInput = document.getElementById("chatInput");
     const sendBtn = document.getElementById("sendBtn");
@@ -784,12 +826,89 @@
       document.body.classList.add('embedded-mode');
     }
 
-    // Listen for cross-frame messages from parent website (e.g. clicking quick topics on DSCE portal)
+    // Save and load chat messages from localStorage so conversation is preserved across reloads
+    function saveChatHistory() {
+      try {
+        const items = [];
+        const rows = messagesContainer.querySelectorAll(".message-row");
+        rows.forEach(r => {
+          const isUser = r.classList.contains("user");
+          const c = r.querySelector(".message-content");
+          if (c) {
+            items.push({
+              sender: isUser ? "user" : "assistant",
+              html: c.innerHTML
+            });
+          }
+        });
+        localStorage.setItem("dsce_chat_history", JSON.stringify(items));
+      } catch (e) {}
+    }
+
+    function loadChatHistory() {
+      try {
+        const raw = localStorage.getItem("dsce_chat_history");
+        if (!raw) return;
+        const items = JSON.parse(raw);
+        if (items && items.length > 0) {
+          messagesContainer.innerHTML = "";
+          items.forEach(m => {
+            const row = document.createElement("div");
+            row.className = `message-row ${m.sender}`;
+            const avatar = document.createElement("div");
+            avatar.className = `avatar ${m.sender === 'user' ? 'user' : 'bot'}`;
+            avatar.textContent = m.sender === 'user' ? 'You' : 'DS';
+            const contentBox = document.createElement("div");
+            contentBox.className = "message-content";
+            contentBox.innerHTML = m.html;
+
+            // Re-bind suggestion clicks
+            contentBox.querySelectorAll(".suggestion-chip").forEach(chip => {
+              const txt = chip.textContent.replace(/^[💡\s]+/, '').trim();
+              chip.onclick = () => askQuestion(txt);
+            });
+
+            row.appendChild(avatar);
+            row.appendChild(contentBox);
+            messagesContainer.appendChild(row);
+          });
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+      } catch (e) {}
+    }
+
+    // Load saved chat history on startup
+    loadChatHistory();
+
+    // Listen for cross-frame messages from parent website or widget wrapper
     window.addEventListener("message", (event) => {
-      if (event.data && event.data.type === "DSCE_ASK_QUESTION" && event.data.query) {
+      if (!event.data) return;
+      if (event.data.type === "DSCE_ASK_QUESTION" && event.data.query) {
         askQuestion(event.data.query);
+      } else if (event.data.type === "DSCE_MAXIMIZE_STATE") {
+        const btn = document.getElementById("maximizeBtn");
+        if (btn) {
+          btn.innerHTML = event.data.isMaximized ? "🗗" : "⛶";
+          btn.title = event.data.isMaximized ? "Restore Window Size" : "Maximize Window";
+        }
       }
     });
+
+    // Window size controls for embedded widget
+    function toggleMaximize() {
+      window.parent.postMessage({ type: "DSCE_TOGGLE_MAXIMIZE" }, "*");
+    }
+
+    function minimizeWidget() {
+      window.parent.postMessage({ type: "DSCE_MINIMIZE" }, "*");
+    }
+
+    function setSize(preset) {
+      document.querySelectorAll(".size-chip").forEach(c => c.classList.remove("active"));
+      const btn = Array.from(document.querySelectorAll(".size-chip")).find(c => c.textContent === preset);
+      if (btn) btn.classList.add("active");
+      window.parent.postMessage({ type: "DSCE_SET_SIZE", size: preset }, "*");
+    }
 
     function renderMarkdown(text) {
       if (!text) return "";
@@ -889,9 +1008,14 @@
       row.appendChild(contentBox);
       messagesContainer.appendChild(row);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      saveChatHistory();
     }
 
     function clearChat() {
+      localStorage.removeItem("dsce_chat_history");
+      sessionId = "dsce_session_" + Math.random().toString(36).substring(2, 9);
+      localStorage.setItem("dsce_session_id", sessionId);
+
       messagesContainer.innerHTML = `
         <div class="message-row assistant">
           <div class="avatar bot">DS</div>

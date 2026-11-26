@@ -88,7 +88,11 @@ OUTPUT & FORMATTING GUIDELINES:
 3. Conciseness & No Cluttered Inline Citations:
    - Keep answers short, punchy, and detailed without unnecessary filler.
    - Do NOT include messy inline URLs or citations in the body text (the web interface automatically provides an expandable citations list below your response).
-4. Accurate Grounding & Fallback:
+4. Conversational Continuity & Contextual Memory:
+   - Carefully review the CONVERSATION HISTORY before answering.
+   - If the user's latest question references prior turns or uses pronouns (such as "it", "that", "this fee", "the hostel mentioned", "there", "them", "how to pay", "and for the other one?"), explicitly resolve the reference and seamlessly connect your answer to the previous discussion.
+   - Acknowledge earlier context naturally (e.g., "Connecting to the COMED-K fee of ₹3,22,000 we discussed...", or "Regarding the Indian Boys Hostel mentioned earlier...").
+5. Accurate Grounding & Fallback:
    - Rely strictly on the facts in the CONTEXT below. Never invent fees, numbers, or policies.
    - If information is not found in the context, succinctly state that official records are not in the current public documents and provide the relevant official campus contact (phone/email/office room).
 
@@ -298,14 +302,47 @@ def get_test_questions():
     ]
 
 
+def contextualize_retrieval_query(query: str, history: List[Dict[str, str]]) -> str:
+    """Enhances retrieval query with recent conversation context if the query has anaphoric references or is a follow-up."""
+    if not history:
+        return query
+    
+    referential_keywords = {
+        "it", "that", "this", "they", "them", "there", "same", "pay", "payment",
+        "where", "when", "curfew", "mess", "fees", "fee", "concession", "refund",
+        "counter", "room", "hostel", "rules", "eligibility", "documents", "second",
+        "first", "both", "differ", "difference", "what about", "is there", "and",
+        "how", "why", "apply", "who", "which", "cost", "dates", "schedule"
+    }
+    
+    words = set(re.findall(r"\w+", query.lower()))
+    is_short = len(words) <= 5
+    has_ref = bool(words & referential_keywords)
+    
+    if is_short or has_ref:
+        # Retrieve recent user queries from history to supply topic context
+        recent_user_turns = [m["content"] for m in history if m["role"] == "user"][-2:]
+        if recent_user_turns:
+            return f"{' '.join(recent_user_turns)} {query}"
+            
+    return query
+
+
 @app.post("/api/chat", response_model=ChatResponse)
 def chat_endpoint(req: ChatRequest):
-    """Processes user query through the RAG pipeline."""
+    """Processes user query through the RAG pipeline with multi-turn memory."""
     query = req.query.strip()
     session_id = req.session_id or "default_session"
     
     if not query:
         raise HTTPException(status_code=400, detail="Query cannot be empty")
+
+    # Format multi-turn conversation history (keeping last 6 messages / 3 full turns)
+    history = session_store.get(session_id, [])
+    history_str = "\n".join([f"{msg['role'].upper()}: {msg['content']}" for msg in history[-6:]])
+
+    # Contextualize retrieval query using conversation history for follow-up references
+    retrieval_query = contextualize_retrieval_query(query, history)
 
     # 1. Retrieve top-k context chunks from ChromaDB (with auto-reconnect on index refresh)
     global collection
@@ -315,7 +352,7 @@ def chat_endpoint(req: ChatRequest):
 
     try:
         results = col.query(
-            query_texts=[query],
+            query_texts=[retrieval_query],
             n_results=req.top_k or 4
         )
     except Exception as query_err:
@@ -324,7 +361,7 @@ def chat_endpoint(req: ChatRequest):
         if col is None:
             raise HTTPException(status_code=503, detail="Vector index not found.")
         results = col.query(
-            query_texts=[query],
+            query_texts=[retrieval_query],
             n_results=req.top_k or 4
         )
 
@@ -352,9 +389,8 @@ def chat_endpoint(req: ChatRequest):
 
     context_str = "\n\n---\n\n".join(context_parts) if context_parts else "No relevant documents found."
 
-    # Format multi-turn conversation history
-    history = session_store.get(session_id, [])
-    history_str = "\n".join([f"{msg['role'].upper()}: {msg['content']}" for msg in history[-4:]])
+    # Format multi-turn conversation history for prompt (last 6 messages / 3 Q&A pairs)
+    history_str = "\n".join([f"{msg['role'].upper()}: {msg['content']}" for msg in history[-6:]])
 
     # 2. Build Prompt
     full_prompt = SYSTEM_PROMPT_TEMPLATE.format(
