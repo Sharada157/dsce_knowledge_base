@@ -61,6 +61,39 @@ get_or_refresh_collection()
 # In-memory session memory: {session_id: [{"role": "user"|"assistant", "content": "..."}]}
 session_store: Dict[str, List[Dict[str, str]]] = {}
 
+# Out-of-Domain Detection & Guardrails
+CAMPUS_KEYWORDS = {
+    "dsce", "dayananda", "sagar", "college", "campus", "vtu", "comedk", "comed-k",
+    "kcet", "cet", "pgcet", "gate", "admission", "admissions", "fee", "fees", "hostel",
+    "hostels", "mess", "curfew", "outpass", "warden", "placement", "placements", "salary",
+    "package", "packages", "attendance", "nsar", "iat", "cie", "see", "exam", "exams",
+    "autonomous", "semester", "syllabus", "course", "courses", "engineering", "b.e",
+    "be", "m.tech", "mba", "mca", "branch", "branches", "cse", "aiml", "ise", "ece",
+    "eee", "mech", "civil", "biotech", "ai", "furore", "point blank", "club", "clubs",
+    "library", "canteen", "shavige", "kumaraswamy", "layout", "bangalore", "bengaluru",
+    "metro", "bmtc", "15-e", "15e", "kadirenahalli", "banashankari", "jp nagar",
+    "dsu", "dsatm", "management quota", "quota", "cutoff", "cutoffs", "ranking", "nirf",
+    "naac", "nba", "derbi", "cil", "scholarship", "scholarships", "principal", "hod",
+    "building", "room", "counter", "challan", "eligibility", "documents", "verification"
+}
+
+OUT_OF_DOMAIN_PATTERNS = [
+    r"\b(who is|who was)\s+(ronaldo|cristiano|messi|neymar|mbappe|dhoni|virat|kohli|sachin|rohit|modi|biden|trump|putin|obama|musk|elon|einstein|newton|shakespeare|gandhi|nehru)\b",
+    r"\b(write|give|generate|create)\s+(a\s+|me\s+)?(python|java|c\+\+|c#|javascript|sql|html|css|code|script|program|function|algorithm)\b",
+    r"\b(fibonacci|factorial|palindrome|bubble sort|quick sort|binary search|leetcode|hackerrank|codechef)\b",
+    r"\b(weather in|temperature in|capital of|currency of|population of|president of|prime minister of)\b",
+    r"\b(tell me a joke|write a poem|write a song|movie recommendation|recipe for|how to cook)\b",
+    r"\b(what is the capital|who won the|fifa|world cup|ipl|champions league|ballon d'or)\b"
+]
+
+OUT_OF_DOMAIN_RESPONSE = (
+    "I am specifically designed as the **Dayananda Sagar College of Engineering (DSCE) Campus Assistant**.\n\n"
+    "I can only answer questions related to **DSCE** — including admissions, 2026–27 fee structures, "
+    "VTU autonomous regulations, hostel facilities, campus transit, placements, and student clubs.\n\n"
+    "I cannot assist with general trivia, programming generation tasks, or topics outside of DSCE. "
+    "Please feel free to ask any question regarding DSCE!"
+)
+
 # Contact fallbacks for "I don't know" or out-of-scope queries
 FALLBACK_CONTACTS = """
 I could not find definitive official information about that in the current public college knowledge base. 
@@ -76,6 +109,14 @@ To get accurate guidance, please contact the respective college office:
 
 SYSTEM_PROMPT_TEMPLATE = """You are the official student-built AI assistant for Dayananda Sagar College of Engineering (DSCE), Bengaluru.
 Your goal is to answer queries with exceptional clarity, high precision, and professional formatting based strictly on the provided context.
+
+CRITICAL SCOPE BOUNDARY & OUT-OF-DOMAIN RESTRICTION:
+- You are exclusively an information assistant for Dayananda Sagar College of Engineering (DSCE).
+- You MUST NEVER answer general knowledge questions, world trivia (e.g., celebrities, sports stars like Ronaldo or Messi, movies, geography), general coding requests (e.g., write Python code, Fibonacci series, sorting algorithms), or non-DSCE queries.
+- Answer ONLY topics directly related to DSCE: admissions, fees, hostel rules, academics, autonomous VTU exams, placements, campus facilities, and student life.
+- If a question is not about DSCE, you MUST refuse immediately and concisely:
+  "I am specifically designed as the DSCE Campus Assistant to answer questions about Dayananda Sagar College of Engineering (admissions, fees, campus facilities, academics, hostels, and placements). I cannot assist with general trivia, programming requests, or non-college topics. Please ask a question related to DSCE!"
+- NEVER use your general pre-trained training knowledge to answer out-of-domain queries.
 
 OUTPUT & FORMATTING GUIDELINES:
 1. Direct, Crisp Summary Upfront:
@@ -330,12 +371,27 @@ def contextualize_retrieval_query(query: str, history: List[Dict[str, str]]) -> 
 
 @app.post("/api/chat", response_model=ChatResponse)
 def chat_endpoint(req: ChatRequest):
-    """Processes user query through the RAG pipeline with multi-turn memory."""
+    """Processes user query through the RAG pipeline with multi-turn memory and strict domain guardrails."""
     query = req.query.strip()
     session_id = req.session_id or "default_session"
     
     if not query:
         raise HTTPException(status_code=400, detail="Query cannot be empty")
+
+    query_lower = query.lower()
+
+    # 1. Regex check for obvious out-of-domain queries (celebrities, coding requests, general trivia)
+    if any(re.search(pat, query_lower) for pat in OUT_OF_DOMAIN_PATTERNS):
+        return ChatResponse(
+            answer=OUT_OF_DOMAIN_RESPONSE,
+            sources=[],
+            suggested_questions=[
+                "What is the 1st year B.E. COMEDK fee for 2026-27?",
+                "What is the difference between DSCE, DSU, and DSATM?",
+                "What are the hostel curfew timings and mess rules?"
+            ],
+            session_id=session_id
+        )
 
     # Format multi-turn conversation history (keeping last 6 messages / 3 full turns)
     history = session_store.get(session_id, [])
@@ -344,7 +400,7 @@ def chat_endpoint(req: ChatRequest):
     # Contextualize retrieval query using conversation history for follow-up references
     retrieval_query = contextualize_retrieval_query(query, history)
 
-    # 1. Retrieve top-k context chunks from ChromaDB (with auto-reconnect on index refresh)
+    # 2. Retrieve top-k context chunks from ChromaDB (with auto-reconnect on index refresh)
     global collection
     col = collection or get_or_refresh_collection()
     if col is None:
@@ -368,6 +424,21 @@ def chat_endpoint(req: ChatRequest):
     documents = results.get("documents", [[]])[0]
     metadatas = results.get("metadatas", [[]])[0]
     distances = results.get("distances", [[]])[0] if "distances" in results else []
+    min_dist = min(distances) if distances else 1.0
+
+    # 3. Vector distance threshold: check if query is completely unrelated to college documents
+    has_campus_term = any(k in query_lower for k in CAMPUS_KEYWORDS)
+    if min_dist >= 0.76 and not has_campus_term:
+        return ChatResponse(
+            answer=OUT_OF_DOMAIN_RESPONSE,
+            sources=[],
+            suggested_questions=[
+                "What is the 1st year B.E. COMEDK fee for 2026-27?",
+                "What is the difference between DSCE, DSU, and DSATM?",
+                "What are the hostel curfew timings and mess rules?"
+            ],
+            session_id=session_id
+        )
 
     # Format context and sources
     context_parts = []
@@ -422,6 +493,11 @@ def chat_endpoint(req: ChatRequest):
         session_store[session_id] = []
     session_store[session_id].append({"role": "user", "content": query})
     session_store[session_id].append({"role": "assistant", "content": answer})
+
+    # Clean sources if refusal was returned by LLM
+    ans_lower = answer.lower()
+    if "outside of dsce" in ans_lower or "cannot assist with general" in ans_lower or ("dsce campus assistant" in ans_lower and "cannot assist" in ans_lower):
+        sources = []
 
     # Generate follow-up suggestions
     suggested = generate_suggested_questions(query, answer)
